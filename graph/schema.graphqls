@@ -1,0 +1,96 @@
+scalar Time
+
+type List {
+  id: ID!
+  name: String!
+  items: [Item!]!
+  users: [User!]!
+  created_at: Time!
+  updated_at: Time!
+}
+
+type User {
+  id: ID!
+  "users are linked in order to share lists"
+  linkedUsers: [User!]!
+  list: [List!]!
+  name: String!
+  email: String!
+  phone: String!
+  "Can be a password, pin, etc..."
+  accessToken: String!
+  created_at: Time!
+  updated_at: Time!
+}
+type Item {
+  id: ID!
+  list: List!
+  content: String!
+  purchased: Boolean!
+  recurring: Boolean!
+  postponed: Boolean!
+  created_at: Time!
+  updated_at: Time!
+}
+type Query {
+  list(listId: ID!): List
+  lists(listIds: [ID!]!): [List!]!
+  user(userId: ID!): User
+  users(userIds: [ID!]!): [User!]!
+  item(itemId: ID!): Item
+  items(itemIds: [ID!]!): [Item!]!
+}
+type Mutation {
+  addUser(input: NewUser!): ID
+  editUser(input: EditUser!): ID
+  deleteUser(userId: ID!): ID
+  linkUser(input: LinkUserInput!): ID
+  unlinkUser(linkedUserId: ID!): ID
+  addList(name: String!): ID
+  editList(input: EditList!): ID
+  deleteList(input: ID!): ID
+  editSharedList(input: EditSharedList!): ID
+  addItem(input: NewItem!): ID
+  editItem(input: EditItem!): ID
+  deleteItem(itemId: ID!): ID
+}
+input NewUser {
+  name: String!
+  email: String!
+  phone: String!
+  accessToken: String!
+}
+input EditUser {
+  id: ID!
+  name: String
+  email: String
+  phone: String
+  accessToken: String
+}
+input LinkUserInput {
+  linkedUserId: ID!
+  sharedLists: [ID!]!
+}
+input EditList {
+  id: ID!
+  name: String!
+}
+input EditSharedList {
+  listId: ID!
+  usersId: [ID!]!
+}
+input NewItem {
+  list: ID!
+  content: String!
+  purchased: Boolean
+  recurring: Boolean
+  postponed: Boolean
+}
+input EditItem {
+  id: ID!
+  list: ID
+  content: String
+  purchased: Boolean
+  recurring: Boolean
+  postponed: Boolean
+}
