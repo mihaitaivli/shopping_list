@@ -4,5 +4,8 @@ generate:
 develop:
 	go run server.go
 
-localDb:
+localDb_up:
 	cd local_db && docker-compose up -d
+
+localDb_down:
+	cd local_db && docker-compose down
