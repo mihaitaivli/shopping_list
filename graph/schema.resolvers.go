@@ -7,12 +7,27 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mihaitaivli/shopping_list/data_utils"
 	"github.com/mihaitaivli/shopping_list/graph/generated"
 	"github.com/mihaitaivli/shopping_list/graph/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var client = data_utils.CreateClient()
+
 func (r *mutationResolver) AddUser(ctx context.Context, input model.NewUser) (*string, error) {
-	panic(fmt.Errorf("not implemented"))
+	collection := client.Database("localDb").Collection("Users")
+
+	res, err := collection.InsertOne(ctx, input)
+
+	if err != nil {
+		fmt.Printf("Error while inserting user: %v", err)
+		return nil, err
+	}
+
+	id := res.InsertedID.(primitive.ObjectID).Hex()
+
+	return &id, nil
 }
 
 func (r *mutationResolver) EditUser(ctx context.Context, input model.EditUser) (*string, error) {
