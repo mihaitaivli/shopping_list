@@ -10,12 +10,15 @@ import (
 	"github.com/mihaitaivli/shopping_list/data_utils"
 	"github.com/mihaitaivli/shopping_list/graph/generated"
 	"github.com/mihaitaivli/shopping_list/graph/model"
+	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var client = data_utils.CreateClient()
 
 func (r *mutationResolver) AddUser(ctx context.Context, input model.NewUser) (*string, error) {
+	defer client.Disconnect(ctx)
 	collection := client.Database("localDb").Collection("Users")
 
 	res, err := collection.InsertOne(ctx, input)
@@ -31,7 +34,29 @@ func (r *mutationResolver) AddUser(ctx context.Context, input model.NewUser) (*s
 }
 
 func (r *mutationResolver) EditUser(ctx context.Context, input model.EditUser) (*string, error) {
-	panic(fmt.Errorf("not implemented"))
+	defer client.Disconnect(ctx)
+	collection := client.Database("localDb").Collection("Users")
+
+	objId, convertErr := primitive.ObjectIDFromHex(input.ID)
+	if convertErr != nil {
+		panic("Error converting string to ObjectId")
+	}
+	filter := bson.M{"_id": bson.M{"$eq": objId}}
+
+	res, err := collection.UpdateOne(ctx, filter, bson.M{"$set": bson.M{
+		"name": input.Name,
+	}})
+
+	if err != nil {
+		fmt.Printf("Error while updating userId: %s - %v\n", input.ID, err)
+		return nil, err
+	}
+
+	count := res.ModifiedCount
+	if count == 1 {
+		return &input.ID, nil
+	}
+	return nil, errors.Errorf("Unsuccessful insert")
 }
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (*string, error) {
