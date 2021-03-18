@@ -25,14 +25,6 @@ type EditSharedList struct {
 	UsersID []string `json:"usersId"`
 }
 
-type EditUser struct {
-	ID          string  `json:"id"`
-	Name        *string `json:"name"`
-	Email       *string `json:"email"`
-	Phone       *string `json:"phone"`
-	AccessToken *string `json:"accessToken"`
-}
-
 type Item struct {
 	ID        string    `json:"id"`
 	List      *List     `json:"list"`

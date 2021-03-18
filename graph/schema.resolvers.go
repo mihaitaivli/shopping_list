@@ -5,20 +5,18 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/mihaitaivli/shopping_list/data_utils"
 	"github.com/mihaitaivli/shopping_list/graph/generated"
 	"github.com/mihaitaivli/shopping_list/graph/model"
-	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var client = data_utils.CreateClient()
-
 func (r *mutationResolver) AddUser(ctx context.Context, input model.NewUser) (*string, error) {
-	defer client.Disconnect(ctx)
+	// defer client.Disconnect(ctx)
 	collection := client.Database("localDb").Collection("Users")
 
 	res, err := collection.InsertOne(ctx, input)
@@ -34,18 +32,18 @@ func (r *mutationResolver) AddUser(ctx context.Context, input model.NewUser) (*s
 }
 
 func (r *mutationResolver) EditUser(ctx context.Context, input model.EditUser) (*string, error) {
-	defer client.Disconnect(ctx)
+	// defer client.Disconnect(ctx)
 	collection := client.Database("localDb").Collection("Users")
 
 	objId, convertErr := primitive.ObjectIDFromHex(input.ID)
 	if convertErr != nil {
 		panic("Error converting string to ObjectId")
 	}
-	filter := bson.M{"_id": bson.M{"$eq": objId}}
 
-	res, err := collection.UpdateOne(ctx, filter, bson.M{"$set": bson.M{
-		"name": input.Name,
-	}})
+	filter := bson.M{"_id": bson.M{"$eq": objId}}
+	update := bson.M{"$set": input}
+
+	res, err := collection.UpdateOne(ctx, filter, update)
 
 	if err != nil {
 		fmt.Printf("Error while updating userId: %s - %v\n", input.ID, err)
@@ -56,7 +54,7 @@ func (r *mutationResolver) EditUser(ctx context.Context, input model.EditUser) (
 	if count == 1 {
 		return &input.ID, nil
 	}
-	return nil, errors.Errorf("Unsuccessful insert")
+	return nil, errors.New("unsuccessful insert")
 }
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (*string, error) {
@@ -131,3 +129,11 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+var client = data_utils.CreateClient()
