@@ -32,7 +32,6 @@ func (r *mutationResolver) AddUser(ctx context.Context, input model.NewUser) (*s
 }
 
 func (r *mutationResolver) EditUser(ctx context.Context, input model.EditUser) (*string, error) {
-	// defer client.Disconnect(ctx)
 	collection := client.Database("localDb").Collection("Users")
 
 	objId, convertErr := primitive.ObjectIDFromHex(input.ID)
@@ -58,7 +57,24 @@ func (r *mutationResolver) EditUser(ctx context.Context, input model.EditUser) (
 }
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (*string, error) {
-	panic(fmt.Errorf("not implemented"))
+	collection := client.Database("localDb").Collection("Users")
+	objId, convertErr := primitive.ObjectIDFromHex(userID)
+	if convertErr != nil {
+		panic("Error converting string to ObjectId")
+	}
+	res, err := collection.DeleteOne(ctx, bson.M{"_id": objId})
+
+	if err != nil {
+		fmt.Printf("Error deleting user with id: #{userID}\n")
+		return nil, errors.New("unsuccessful delete")
+	}
+
+	if res.DeletedCount != 1 {
+		fmt.Printf("No user with id: #{userID}\n")
+		return nil, errors.New("unsuccessful delete")
+	}
+
+	return &userID, nil
 }
 
 func (r *mutationResolver) LinkUser(ctx context.Context, input model.LinkUserInput) (*string, error) {
