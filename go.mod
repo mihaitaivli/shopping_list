@@ -3,9 +3,10 @@ module github.com/mihaitaivli/shopping_list
 go 1.15
 
 require (
-	github.com/99designs/gqlgen v0.13.0
+	github.com/99designs/gqlgen v0.13.1-0.20210415065809-5ad012e3d7be
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/aws/aws-sdk-go v1.38.60 // indirect
+	github.com/go-chi/chi v3.3.2+incompatible // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/klauspost/compress v1.13.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect

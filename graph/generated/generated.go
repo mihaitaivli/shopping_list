@@ -65,18 +65,17 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddItem        func(childComplexity int, input model.NewItem) int
-		AddList        func(childComplexity int, name string) int
-		AddUser        func(childComplexity int, input model.NewUser) int
-		DeleteItem     func(childComplexity int, itemID string) int
-		DeleteList     func(childComplexity int, input string) int
-		DeleteUser     func(childComplexity int, userID string) int
-		EditItem       func(childComplexity int, input model.EditItem) int
-		EditList       func(childComplexity int, input model.EditList) int
-		EditSharedList func(childComplexity int, input model.EditSharedList) int
-		EditUser       func(childComplexity int, input model.EditUser) int
-		LinkUser       func(childComplexity int, input model.LinkUserInput) int
-		UnlinkUser     func(childComplexity int, linkedUserID string) int
+		AddItem            func(childComplexity int, input model.NewItem) int
+		AddList            func(childComplexity int, name string) int
+		AddUser            func(childComplexity int, input model.NewUser) int
+		AddUserToList      func(childComplexity int, input model.AddUserToListInput) int
+		DeleteItem         func(childComplexity int, itemID string) int
+		DeleteList         func(childComplexity int, input string) int
+		DeleteUser         func(childComplexity int, userID string) int
+		EditItem           func(childComplexity int, input model.EditItem) int
+		EditList           func(childComplexity int, input model.EditList) int
+		EditUser           func(childComplexity int, input model.EditUser) int
+		RemoveUserFromList func(childComplexity int, input model.RemoveUserFromListInput) int
 	}
 
 	Query struct {
@@ -93,7 +92,6 @@ type ComplexityRoot struct {
 		CreatedAt   func(childComplexity int) int
 		Email       func(childComplexity int) int
 		ID          func(childComplexity int) int
-		LinkedUsers func(childComplexity int) int
 		List        func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Phone       func(childComplexity int) int
@@ -103,17 +101,16 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	AddUser(ctx context.Context, input model.NewUser) (*string, error)
-	EditUser(ctx context.Context, input model.EditUser) (*string, error)
-	DeleteUser(ctx context.Context, userID string) (*string, error)
-	LinkUser(ctx context.Context, input model.LinkUserInput) (*string, error)
-	UnlinkUser(ctx context.Context, linkedUserID string) (*string, error)
+	EditUser(ctx context.Context, input model.EditUser) (bool, error)
+	DeleteUser(ctx context.Context, userID string) (bool, error)
 	AddList(ctx context.Context, name string) (*string, error)
-	EditList(ctx context.Context, input model.EditList) (*string, error)
-	DeleteList(ctx context.Context, input string) (*string, error)
-	EditSharedList(ctx context.Context, input model.EditSharedList) (*string, error)
+	EditList(ctx context.Context, input model.EditList) (bool, error)
+	DeleteList(ctx context.Context, input string) (bool, error)
+	AddUserToList(ctx context.Context, input model.AddUserToListInput) (bool, error)
+	RemoveUserFromList(ctx context.Context, input model.RemoveUserFromListInput) (bool, error)
 	AddItem(ctx context.Context, input model.NewItem) (*string, error)
-	EditItem(ctx context.Context, input model.EditItem) (*string, error)
-	DeleteItem(ctx context.Context, itemID string) (*string, error)
+	EditItem(ctx context.Context, input model.EditItem) (bool, error)
+	DeleteItem(ctx context.Context, itemID string) (bool, error)
 }
 type QueryResolver interface {
 	List(ctx context.Context, listID string) (*model.List, error)
@@ -273,6 +270,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddUser(childComplexity, args["input"].(model.NewUser)), true
 
+	case "Mutation.addUserToList":
+		if e.complexity.Mutation.AddUserToList == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addUserToList_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddUserToList(childComplexity, args["input"].(model.AddUserToListInput)), true
+
 	case "Mutation.deleteItem":
 		if e.complexity.Mutation.DeleteItem == nil {
 			break
@@ -333,18 +342,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditList(childComplexity, args["input"].(model.EditList)), true
 
-	case "Mutation.editSharedList":
-		if e.complexity.Mutation.EditSharedList == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_editSharedList_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.EditSharedList(childComplexity, args["input"].(model.EditSharedList)), true
-
 	case "Mutation.editUser":
 		if e.complexity.Mutation.EditUser == nil {
 			break
@@ -357,29 +354,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditUser(childComplexity, args["input"].(model.EditUser)), true
 
-	case "Mutation.linkUser":
-		if e.complexity.Mutation.LinkUser == nil {
+	case "Mutation.removeUserFromList":
+		if e.complexity.Mutation.RemoveUserFromList == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_linkUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_removeUserFromList_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.LinkUser(childComplexity, args["input"].(model.LinkUserInput)), true
-
-	case "Mutation.unlinkUser":
-		if e.complexity.Mutation.UnlinkUser == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_unlinkUser_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UnlinkUser(childComplexity, args["linkedUserId"].(string)), true
+		return e.complexity.Mutation.RemoveUserFromList(childComplexity, args["input"].(model.RemoveUserFromListInput)), true
 
 	case "Query.item":
 		if e.complexity.Query.Item == nil {
@@ -480,13 +465,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.ID(childComplexity), true
-
-	case "User.linkedUsers":
-		if e.complexity.User.LinkedUsers == nil {
-			break
-		}
-
-		return e.complexity.User.LinkedUsers(childComplexity), true
 
 	case "User.list":
 		if e.complexity.User.List == nil {
@@ -593,8 +571,6 @@ type List {
 
 type User {
   id: ID!
-  "users are linked in order to share lists"
-  linkedUsers: [User!]!
   list: [List!]!
   name: String!
   email: String!
@@ -624,17 +600,16 @@ type Query {
 }
 type Mutation {
   addUser(input: NewUser!): ID
-  editUser(input: EditUser!): ID
-  deleteUser(userId: ID!): ID
-  linkUser(input: LinkUserInput!): ID
-  unlinkUser(linkedUserId: ID!): ID
+  editUser(input: EditUser!): Boolean!
+  deleteUser(userId: ID!): Boolean!
   addList(name: String!): ID
-  editList(input: EditList!): ID
-  deleteList(input: ID!): ID
-  editSharedList(input: EditSharedList!): ID
+  editList(input: EditList!): Boolean!
+  deleteList(input: ID!): Boolean!
+  addUserToList(input: AddUserToListInput!): Boolean!
+  removeUserFromList(input: RemoveUserFromListInput!): Boolean!
   addItem(input: NewItem!): ID
-  editItem(input: EditItem!): ID
-  deleteItem(itemId: ID!): ID
+  editItem(input: EditItem!): Boolean!
+  deleteItem(itemId: ID!): Boolean!
 }
 input NewUser {
   name: String!
@@ -649,17 +624,18 @@ input EditUser {
   phone: String
   accessToken: String
 }
-input LinkUserInput {
-  linkedUserId: ID!
-  sharedLists: [ID!]!
-}
 input EditList {
   id: ID!
   name: String!
 }
-input EditSharedList {
+input AddUserToListInput {
   listId: ID!
-  usersId: [ID!]!
+  userEmail: String
+  userPhone: String
+}
+input RemoveUserFromListInput {
+  listId: ID!
+  userId: ID!
 }
 input NewItem {
   list: ID!
@@ -711,6 +687,21 @@ func (ec *executionContext) field_Mutation_addList_args(ctx context.Context, raw
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_addUserToList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.AddUserToListInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNAddUserToListInput2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐAddUserToListInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -804,21 +795,6 @@ func (ec *executionContext) field_Mutation_editList_args(ctx context.Context, ra
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_editSharedList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.EditSharedList
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNEditSharedList2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐEditSharedList(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_editUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -834,33 +810,18 @@ func (ec *executionContext) field_Mutation_editUser_args(ctx context.Context, ra
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_linkUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_removeUserFromList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.LinkUserInput
+	var arg0 model.RemoveUserFromListInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNLinkUserInput2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐLinkUserInput(ctx, tmp)
+		arg0, err = ec.unmarshalNRemoveUserFromListInput2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐRemoveUserFromListInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_unlinkUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["linkedUserId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedUserId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["linkedUserId"] = arg0
 	return args, nil
 }
 
@@ -1568,11 +1529,14 @@ func (ec *executionContext) _Mutation_editUser(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1607,89 +1571,14 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_linkUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
 		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_linkUser_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().LinkUser(rctx, args["input"].(model.LinkUserInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_unlinkUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_unlinkUser_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UnlinkUser(rctx, args["linkedUserId"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1763,11 +1652,14 @@ func (ec *executionContext) _Mutation_editList(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1802,14 +1694,17 @@ func (ec *executionContext) _Mutation_deleteList(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_editSharedList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_addUserToList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1826,7 +1721,7 @@ func (ec *executionContext) _Mutation_editSharedList(ctx context.Context, field 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_editSharedList_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_addUserToList_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1834,18 +1729,63 @@ func (ec *executionContext) _Mutation_editSharedList(ctx context.Context, field 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().EditSharedList(rctx, args["input"].(model.EditSharedList))
+		return ec.resolvers.Mutation().AddUserToList(rctx, args["input"].(model.AddUserToListInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_removeUserFromList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_removeUserFromList_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RemoveUserFromList(rctx, args["input"].(model.RemoveUserFromListInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1919,11 +1859,14 @@ func (ec *executionContext) _Mutation_editItem(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1958,11 +1901,14 @@ func (ec *executionContext) _Mutation_deleteItem(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_list(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2312,41 +2258,6 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _User_linkedUsers(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LinkedUsers, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_list(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -2729,6 +2640,41 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 	res := resTmp.([]introspection.InputValue)
 	fc.Result = res
 	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "__Directive",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsRepeatable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
@@ -3681,9 +3627,51 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAddUserToListInput(ctx context.Context, obj interface{}) (model.AddUserToListInput, error) {
+	var it model.AddUserToListInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "listId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("listId"))
+			it.ListID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userEmail":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userEmail"))
+			it.UserEmail, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userPhone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userPhone"))
+			it.UserPhone, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditItem(ctx context.Context, obj interface{}) (model.EditItem, error) {
 	var it model.EditItem
-	var asMap = obj.(map[string]interface{})
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
 
 	for k, v := range asMap {
 		switch k {
@@ -3743,7 +3731,10 @@ func (ec *executionContext) unmarshalInputEditItem(ctx context.Context, obj inte
 
 func (ec *executionContext) unmarshalInputEditList(ctx context.Context, obj interface{}) (model.EditList, error) {
 	var it model.EditList
-	var asMap = obj.(map[string]interface{})
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
 
 	for k, v := range asMap {
 		switch k {
@@ -3769,37 +3760,12 @@ func (ec *executionContext) unmarshalInputEditList(ctx context.Context, obj inte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputEditSharedList(ctx context.Context, obj interface{}) (model.EditSharedList, error) {
-	var it model.EditSharedList
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "listId":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("listId"))
-			it.ListID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "usersId":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usersId"))
-			it.UsersID, err = ec.unmarshalNID2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputEditUser(ctx context.Context, obj interface{}) (model.EditUser, error) {
 	var it model.EditUser
-	var asMap = obj.(map[string]interface{})
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
 
 	for k, v := range asMap {
 		switch k {
@@ -3849,37 +3815,12 @@ func (ec *executionContext) unmarshalInputEditUser(ctx context.Context, obj inte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputLinkUserInput(ctx context.Context, obj interface{}) (model.LinkUserInput, error) {
-	var it model.LinkUserInput
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "linkedUserId":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedUserId"))
-			it.LinkedUserID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "sharedLists":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sharedLists"))
-			it.SharedLists, err = ec.unmarshalNID2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputNewItem(ctx context.Context, obj interface{}) (model.NewItem, error) {
 	var it model.NewItem
-	var asMap = obj.(map[string]interface{})
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
 
 	for k, v := range asMap {
 		switch k {
@@ -3931,7 +3872,10 @@ func (ec *executionContext) unmarshalInputNewItem(ctx context.Context, obj inter
 
 func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj interface{}) (model.NewUser, error) {
 	var it model.NewUser
-	var asMap = obj.(map[string]interface{})
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
 
 	for k, v := range asMap {
 		switch k {
@@ -3964,6 +3908,37 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accessToken"))
 			it.AccessToken, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputRemoveUserFromListInput(ctx context.Context, obj interface{}) (model.RemoveUserFromListInput, error) {
+	var it model.RemoveUserFromListInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "listId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("listId"))
+			it.ListID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			it.UserID, err = ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4114,26 +4089,48 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_addUser(ctx, field)
 		case "editUser":
 			out.Values[i] = ec._Mutation_editUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "deleteUser":
 			out.Values[i] = ec._Mutation_deleteUser(ctx, field)
-		case "linkUser":
-			out.Values[i] = ec._Mutation_linkUser(ctx, field)
-		case "unlinkUser":
-			out.Values[i] = ec._Mutation_unlinkUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "addList":
 			out.Values[i] = ec._Mutation_addList(ctx, field)
 		case "editList":
 			out.Values[i] = ec._Mutation_editList(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "deleteList":
 			out.Values[i] = ec._Mutation_deleteList(ctx, field)
-		case "editSharedList":
-			out.Values[i] = ec._Mutation_editSharedList(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "addUserToList":
+			out.Values[i] = ec._Mutation_addUserToList(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "removeUserFromList":
+			out.Values[i] = ec._Mutation_removeUserFromList(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "addItem":
 			out.Values[i] = ec._Mutation_addItem(ctx, field)
 		case "editItem":
 			out.Values[i] = ec._Mutation_editItem(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "deleteItem":
 			out.Values[i] = ec._Mutation_deleteItem(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4266,11 +4263,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "linkedUsers":
-			out.Values[i] = ec._User_linkedUsers(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "list":
 			out.Values[i] = ec._User_list(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4342,6 +4334,11 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 			}
 		case "args":
 			out.Values[i] = ec.___Directive_args(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "isRepeatable":
+			out.Values[i] = ec.___Directive_isRepeatable(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4562,6 +4559,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNAddUserToListInput2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐAddUserToListInput(ctx context.Context, v interface{}) (model.AddUserToListInput, error) {
+	res, err := ec.unmarshalInputAddUserToListInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4584,11 +4586,6 @@ func (ec *executionContext) unmarshalNEditItem2githubᚗcomᚋmihaitaivliᚋshop
 
 func (ec *executionContext) unmarshalNEditList2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐEditList(ctx context.Context, v interface{}) (model.EditList, error) {
 	res, err := ec.unmarshalInputEditList(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNEditSharedList2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐEditSharedList(ctx context.Context, v interface{}) (model.EditSharedList, error) {
-	res, err := ec.unmarshalInputEditSharedList(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -4639,6 +4636,12 @@ func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast
 		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
 	}
 
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -4676,6 +4679,13 @@ func (ec *executionContext) marshalNItem2ᚕᚖgithubᚗcomᚋmihaitaivliᚋshop
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -4687,11 +4697,6 @@ func (ec *executionContext) marshalNItem2ᚖgithubᚗcomᚋmihaitaivliᚋshoppin
 		return graphql.Null
 	}
 	return ec._Item(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNLinkUserInput2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐLinkUserInput(ctx context.Context, v interface{}) (model.LinkUserInput, error) {
-	res, err := ec.unmarshalInputLinkUserInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNList2ᚕᚖgithubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐListᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.List) graphql.Marshaler {
@@ -4728,6 +4733,13 @@ func (ec *executionContext) marshalNList2ᚕᚖgithubᚗcomᚋmihaitaivliᚋshop
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -4748,6 +4760,11 @@ func (ec *executionContext) unmarshalNNewItem2githubᚗcomᚋmihaitaivliᚋshopp
 
 func (ec *executionContext) unmarshalNNewUser2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐNewUser(ctx context.Context, v interface{}) (model.NewUser, error) {
 	res, err := ec.unmarshalInputNewUser(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNRemoveUserFromListInput2githubᚗcomᚋmihaitaivliᚋshopping_listᚋgraphᚋmodelᚐRemoveUserFromListInput(ctx context.Context, v interface{}) (model.RemoveUserFromListInput, error) {
+	res, err := ec.unmarshalInputRemoveUserFromListInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -4815,6 +4832,13 @@ func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋmihaitaivliᚋshop
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -4866,6 +4890,13 @@ func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgq
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -4939,6 +4970,13 @@ func (ec *executionContext) marshalN__DirectiveLocation2ᚕstringᚄ(ctx context
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -4988,6 +5026,13 @@ func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -5029,6 +5074,13 @@ func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -5178,6 +5230,13 @@ func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgq
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -5218,6 +5277,13 @@ func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgen
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -5258,6 +5324,13 @@ func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 
@@ -5305,6 +5378,13 @@ func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
 	return ret
 }
 

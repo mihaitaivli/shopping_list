@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type AddUserToListInput struct {
+	ListID    string  `json:"listId"`
+	UserEmail *string `json:"userEmail"`
+	UserPhone *string `json:"userPhone"`
+}
+
 type EditItem struct {
 	ID        string  `json:"id"`
 	List      *string `json:"list"`
@@ -20,11 +26,6 @@ type EditList struct {
 	Name string `json:"name"`
 }
 
-type EditSharedList struct {
-	ListID  string   `json:"listId"`
-	UsersID []string `json:"usersId"`
-}
-
 type Item struct {
 	ID        string    `json:"id"`
 	List      *List     `json:"list"`
@@ -34,11 +35,6 @@ type Item struct {
 	Postponed bool      `json:"postponed"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type LinkUserInput struct {
-	LinkedUserID string   `json:"linkedUserId"`
-	SharedLists  []string `json:"sharedLists"`
 }
 
 type List struct {
@@ -65,14 +61,17 @@ type NewUser struct {
 	AccessToken string `json:"accessToken"`
 }
 
+type RemoveUserFromListInput struct {
+	ListID string `json:"listId"`
+	UserID string `json:"userId"`
+}
+
 type User struct {
-	ID string `json:"id"`
-	// users are linked in order to share lists
-	LinkedUsers []*User `json:"linkedUsers"`
-	List        []*List `json:"list"`
-	Name        string  `json:"name"`
-	Email       string  `json:"email"`
-	Phone       string  `json:"phone"`
+	ID    string  `json:"id"`
+	List  []*List `json:"list"`
+	Name  string  `json:"name"`
+	Email string  `json:"email"`
+	Phone string  `json:"phone"`
 	// Can be a password, pin, etc...
 	AccessToken string    `json:"accessToken"`
 	CreatedAt   time.Time `json:"created_at"`

@@ -11,8 +11,6 @@ type List {
 
 type User {
   id: ID!
-  "users are linked in order to share lists"
-  linkedUsers: [User!]!
   list: [List!]!
   name: String!
   email: String!
@@ -42,17 +40,16 @@ type Query {
 }
 type Mutation {
   addUser(input: NewUser!): ID
-  editUser(input: EditUser!): ID
-  deleteUser(userId: ID!): ID
-  linkUser(input: LinkUserInput!): ID
-  unlinkUser(linkedUserId: ID!): ID
+  editUser(input: EditUser!): Boolean!
+  deleteUser(userId: ID!): Boolean!
   addList(name: String!): ID
-  editList(input: EditList!): ID
-  deleteList(input: ID!): ID
-  editSharedList(input: EditSharedList!): ID
+  editList(input: EditList!): Boolean!
+  deleteList(input: ID!): Boolean!
+  addUserToList(input: AddUserToListInput!): Boolean!
+  removeUserFromList(input: RemoveUserFromListInput!): Boolean!
   addItem(input: NewItem!): ID
-  editItem(input: EditItem!): ID
-  deleteItem(itemId: ID!): ID
+  editItem(input: EditItem!): Boolean!
+  deleteItem(itemId: ID!): Boolean!
 }
 input NewUser {
   name: String!
@@ -67,17 +64,18 @@ input EditUser {
   phone: String
   accessToken: String
 }
-input LinkUserInput {
-  linkedUserId: ID!
-  sharedLists: [ID!]!
-}
 input EditList {
   id: ID!
   name: String!
 }
-input EditSharedList {
+input AddUserToListInput {
   listId: ID!
-  usersId: [ID!]!
+  userEmail: String
+  userPhone: String
+}
+input RemoveUserFromListInput {
+  listId: ID!
+  userId: ID!
 }
 input NewItem {
   list: ID!

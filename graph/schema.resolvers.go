@@ -31,7 +31,7 @@ func (r *mutationResolver) AddUser(ctx context.Context, input model.NewUser) (*s
 	return &id, nil
 }
 
-func (r *mutationResolver) EditUser(ctx context.Context, input model.EditUser) (*string, error) {
+func (r *mutationResolver) EditUser(ctx context.Context, input model.EditUser) (bool, error) {
 	collection := client.Database("localDb").Collection("Users")
 
 	objId, convertErr := primitive.ObjectIDFromHex(input.ID)
@@ -46,17 +46,17 @@ func (r *mutationResolver) EditUser(ctx context.Context, input model.EditUser) (
 
 	if err != nil {
 		fmt.Printf("Error while updating userId: %s - %v\n", input.ID, err)
-		return nil, err
+		return false, err
 	}
 
 	count := res.ModifiedCount
 	if count == 1 {
-		return &input.ID, nil
+		return true, nil
 	}
-	return nil, errors.New("unsuccessful insert")
+	return false, errors.New("unsuccessful insert")
 }
 
-func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (*string, error) {
+func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (bool, error) {
 	collection := client.Database("localDb").Collection("Users")
 	objId, convertErr := primitive.ObjectIDFromHex(userID)
 	if convertErr != nil {
@@ -66,38 +66,34 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (*stri
 
 	if err != nil {
 		fmt.Printf("Error deleting user with id: #{userID}\n")
-		return nil, errors.New("unsuccessful delete")
+		return false, errors.New("unsuccessful delete")
 	}
 
 	if res.DeletedCount != 1 {
 		fmt.Printf("No user with id: #{userID}\n")
-		return nil, errors.New("unsuccessful delete")
+		return false, errors.New("unsuccessful delete")
 	}
 
-	return &userID, nil
-}
-
-func (r *mutationResolver) LinkUser(ctx context.Context, input model.LinkUserInput) (*string, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *mutationResolver) UnlinkUser(ctx context.Context, linkedUserID string) (*string, error) {
-	panic(fmt.Errorf("not implemented"))
+	return true, nil
 }
 
 func (r *mutationResolver) AddList(ctx context.Context, name string) (*string, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) EditList(ctx context.Context, input model.EditList) (*string, error) {
+func (r *mutationResolver) EditList(ctx context.Context, input model.EditList) (bool, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) DeleteList(ctx context.Context, input string) (*string, error) {
+func (r *mutationResolver) DeleteList(ctx context.Context, input string) (bool, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) EditSharedList(ctx context.Context, input model.EditSharedList) (*string, error) {
+func (r *mutationResolver) AddUserToList(ctx context.Context, input model.AddUserToListInput) (bool, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) RemoveUserFromList(ctx context.Context, input model.RemoveUserFromListInput) (bool, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
@@ -105,11 +101,11 @@ func (r *mutationResolver) AddItem(ctx context.Context, input model.NewItem) (*s
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) EditItem(ctx context.Context, input model.EditItem) (*string, error) {
+func (r *mutationResolver) EditItem(ctx context.Context, input model.EditItem) (bool, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) DeleteItem(ctx context.Context, itemID string) (*string, error) {
+func (r *mutationResolver) DeleteItem(ctx context.Context, itemID string) (bool, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
